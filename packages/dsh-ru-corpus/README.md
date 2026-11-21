@@ -17,7 +17,7 @@
 1. Ядро (Python 3.10+):
 
    ```bash
-   pip install -e "packages/ru-corpus-kit[tables]"      # из клона репозитория
+   pip install "ru-corpus-kit[tables]"
    ```
 
 2. Корпус — в папке с документами:
@@ -30,10 +30,10 @@
 3. Плагин (пока из локальной папки):
 
    ```bash
-   dsh plugin --profile web add link:/путь/к/ru-corpus/packages/dsh-ru-corpus
+   dsh plugin --profile web add dsh-ru-corpus
    ```
 
-   Когда пакет будет опубликован: `dsh plugin --profile web add dsh-ru-corpus`.
+   Для разработки из локальной копии: `dsh plugin --profile web add link:/путь/к/ru-corpus/packages/dsh-ru-corpus`.
 
 Инструменты работают, если в папке сессии или выше лежит `corpus.toml`. Иначе они отвечают подсказкой
 «ru-corpus init && ru-corpus index», а `corpus_calc` (арифметика) работает и без корпуса.

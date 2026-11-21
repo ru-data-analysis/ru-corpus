@@ -28,14 +28,14 @@ Python 3.10+ is required. For scans install `tesseract` with the `rus` language;
 poppler (`brew install poppler tesseract tesseract-lang` or `apt install poppler-utils tesseract-ocr tesseract-ocr-rus`).
 
 ```bash
-pip install "ru-corpus-kit[tables,ocr] @ git+https://github.com/ru-data-analysis/ru-corpus#subdirectory=packages/ru-corpus-kit"
+pip install "ru-corpus-kit[tables,ocr]"
 ru-corpus init --root ./documents --prefix "corpus/"    # creates corpus.toml
 ru-corpus index                                         # index: text, OCR, lemmas, tables
 ru-corpus search "выручка за 2024 год"                  # evidence: file, page, snippet
 ru-corpus number d0001 1 "1 234 567,89"                 # is the number on the page verbatim
 ```
 
-The PyPI package name is `ru-corpus-kit` (once published: `pip install "ru-corpus-kit[tables,ocr]"`). Without
+Published: `ru-corpus-kit` on PyPI, `dsh-ru-corpus` on npm. Without
 extras only the core is installed. The `[tables]` and `[ocr]` extras bring pdfplumber, pypdfium2 and Pillow, all under permissive licenses.
 
 ### Connecting to an agent
@@ -43,7 +43,7 @@ extras only the core is installed. The `[tables]` and `[ocr]` extras bring pdfpl
 DeepSeek Harness:
 
 ```bash
-dsh plugin --profile web add "file:/path/to/ru-corpus/packages/dsh-ru-corpus"
+dsh plugin --profile web add dsh-ru-corpus
 ```
 
 Claude Code:

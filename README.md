@@ -27,14 +27,14 @@
 (`brew install poppler tesseract tesseract-lang` или `apt install poppler-utils tesseract-ocr tesseract-ocr-rus`).
 
 ```bash
-pip install "ru-corpus-kit[tables,ocr] @ git+https://github.com/ru-data-analysis/ru-corpus#subdirectory=packages/ru-corpus-kit"
+pip install "ru-corpus-kit[tables,ocr]"
 ru-corpus init --root ./документы --prefix "корпус/"    # создаёт corpus.toml
 ru-corpus index                                         # индекс: текст, OCR, леммы, таблицы
 ru-corpus search "выручка за 2024 год"                  # доказательства: файл, страница, фрагмент
 ru-corpus number d0001 1 "1 234 567,89"                 # стоит ли число дословно на странице
 ```
 
-Имя пакета на PyPI — `ru-corpus-kit` (после публикации: `pip install "ru-corpus-kit[tables,ocr]"`). Без extras
+Пакеты опубликованы: `ru-corpus-kit` на PyPI, `dsh-ru-corpus` на npm. Без extras
 ставится только ядро. Об `[tables]` и `[ocr]`: это pdfplumber, pypdfium2 и Pillow, все под пермиссивными лицензиями.
 
 ### Подключение к агенту
@@ -42,7 +42,7 @@ ru-corpus number d0001 1 "1 234 567,89"                 # стоит ли чис
 DeepSeek Harness:
 
 ```bash
-dsh plugin --profile web add "file:/путь/к/ru-corpus/packages/dsh-ru-corpus"
+dsh plugin --profile web add dsh-ru-corpus
 ```
 
 Claude Code:

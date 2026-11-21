@@ -24,14 +24,14 @@
 （`brew install poppler tesseract tesseract-lang` 或 `apt install poppler-utils tesseract-ocr tesseract-ocr-rus`）。
 
 ```bash
-pip install "ru-corpus-kit[tables,ocr] @ git+https://github.com/ru-data-analysis/ru-corpus#subdirectory=packages/ru-corpus-kit"
+pip install "ru-corpus-kit[tables,ocr]"
 ru-corpus init --root ./文档 --prefix "corpus/"          # 生成 corpus.toml
 ru-corpus index                                         # 建立索引：文本、OCR、词元、表格
 ru-corpus search "выручка за 2024 год"                  # 证据：文件、页码、片段
 ru-corpus number d0001 1 "1 234 567,89"                 # 该数字是否逐字出现在该页
 ```
 
-PyPI 上的包名为 `ru-corpus-kit`（发布后可直接 `pip install "ru-corpus-kit[tables,ocr]"`）。不带 extras 时只安装核心。
+已发布：PyPI 上的 `ru-corpus-kit`，npm 上的 `dsh-ru-corpus`。不带 extras 时只安装核心。
 `[tables]` 和 `[ocr]` 引入的是 pdfplumber、pypdfium2 和 Pillow，均为宽松许可证。
 
 ### 接入智能体
@@ -39,7 +39,7 @@ PyPI 上的包名为 `ru-corpus-kit`（发布后可直接 `pip install "ru-corpu
 DeepSeek Harness：
 
 ```bash
-dsh plugin --profile web add "file:/path/to/ru-corpus/packages/dsh-ru-corpus"
+dsh plugin --profile web add dsh-ru-corpus
 ```
 
 Claude Code：
