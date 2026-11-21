@@ -57,13 +57,13 @@ def collect():
     add("ok" if has_module("pymorphy3") else "fail", "pymorphy3 (леммы)",
         "" if has_module("pymorphy3") else "pip install pymorphy3 (ставится вместе с ядром); без него работает грубый стеммер")
     add("ok" if has_module("openpyxl") else "warn", "openpyxl (XLSX)")
-    tables = has_module("pdfplumber") and has_module("pymupdf")
-    add("ok" if tables else "warn", "таблицы PDF (pdfplumber, PyMuPDF)", "" if tables else "pip install \"ru-corpus-kit[tables]\"")
-    ocr_py = has_module("PIL") and has_module("pymupdf")
-    add("ok" if ocr_py else "warn", "OCR, Python-часть (Pillow, PyMuPDF)", "" if ocr_py else "pip install \"ru-corpus-kit[ocr]\"")
+    tables = has_module("pdfplumber") and has_module("pypdfium2")
+    add("ok" if tables else "warn", "таблицы PDF (pdfplumber, pypdfium2)", "" if tables else "pip install \"ru-corpus-kit[tables]\"")
+    ocr_py = has_module("PIL") and has_module("pypdfium2")
+    add("ok" if ocr_py else "warn", "OCR, Python-часть (Pillow, pypdfium2)", "" if ocr_py else "pip install \"ru-corpus-kit[ocr]\"")
 
     add("ok" if shutil.which("pdftotext") else "warn", "pdftotext (poppler)",
-        "" if shutil.which("pdftotext") else "нет: текст PDF возьмёт PyMuPDF; brew install poppler / apt install poppler-utils")
+        "" if shutil.which("pdftotext") else "нет: текст PDF возьмёт pdfplumber; brew install poppler / apt install poppler-utils")
     tess = shutil.which("tesseract")
     if not tess:
         add("warn", "tesseract", "нет: сканы не распознаются; brew install tesseract tesseract-lang / apt install tesseract-ocr tesseract-ocr-rus")

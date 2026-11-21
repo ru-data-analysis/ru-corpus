@@ -15,15 +15,15 @@ JSON с документом, страницей и якорем, либо че�
 
 ```bash
 pip install -e packages/ru-corpus-kit            # ядро: pymorphy3, openpyxl
-pip install -e "packages/ru-corpus-kit[tables]"  # + таблицы PDF с сеткой и широкие таблицы (pdfplumber, PyMuPDF)
-pip install -e "packages/ru-corpus-kit[ocr]"     # + OCR сканов (Pillow, PyMuPDF); в системе нужен tesseract с языком rus
+pip install -e "packages/ru-corpus-kit[tables]"  # + таблицы PDF с сеткой и широкие таблицы (pdfplumber, pypdfium2)
+pip install -e "packages/ru-corpus-kit[ocr]"     # + OCR сканов (Pillow, pypdfium2); в системе нужен tesseract с языком rus
 pip install -e "packages/ru-corpus-kit[rerank]"  # + кросс-энкодер (sentence-transformers) для --rerank
 pip install -e "packages/ru-corpus-kit[office]"  # + .xls и .pptx без LibreOffice (xlrd, python-pptx)
 ```
 
-Лицензия: `pymupdf` из extras `tables` и `ocr` — AGPL-3.0 или коммерческая (см. [THIRD_PARTY_LICENSES.md](../../THIRD_PARTY_LICENSES.md)).
+Лицензии: все зависимости, включая extras, пермиссивные — MIT, BSD, Apache-2.0 (см. [THIRD_PARTY_LICENSES.md](../../THIRD_PARTY_LICENSES.md)).
 
-Системные программы: `pdftotext` из poppler (если его нет, текст PDF берёт PyMuPDF), `tesseract` для сканов
+Системные программы: `pdftotext` из poppler (если его нет, текст PDF берёт pdfplumber), `tesseract` для сканов
 (`brew install poppler tesseract tesseract-lang` / `apt install poppler-utils tesseract-ocr tesseract-ocr-rus`).
 
 ## Быстрый старт
@@ -177,6 +177,6 @@ pytest packages/ru-corpus-kit/tests
 ```
 
 Корпус для тестов генерируется в фикстуре: вымышленная организация «АО «Демо-Сеть»», вымышленные числа
-(PDF — PyMuPDF, XLSX — openpyxl, DOCX — python-docx, скан — картинка с текстом). Тест OCR пропускается без tesseract.
+(PDF — reportlab со шрифтом DejaVu Sans из `tests/fonts/`, XLSX — openpyxl, DOCX — python-docx, скан — картинка с текстом, нарисованная Pillow). Тест OCR пропускается без tesseract.
 
 Лицензия — Apache-2.0.

@@ -36,7 +36,7 @@ ru-corpus number d0001 1 "1 234 567,89"                 # is the number on the p
 ```
 
 The PyPI package name is `ru-corpus-kit` (once published: `pip install "ru-corpus-kit[tables,ocr]"`). Without
-extras only the core is installed. See "Limitations" about `[tables]` and `[ocr]`: they pull in an AGPL library.
+extras only the core is installed. The `[tables]` and `[ocr]` extras bring pdfplumber, pypdfium2 and Pillow, all under permissive licenses.
 
 ### Connecting to an agent
 
@@ -81,10 +81,10 @@ Other checks: `python3 scripts/scrub_check.py` (scrub check), `python3 scripts/s
 
 ## Limitations
 
-- **PyMuPDF (AGPL-3.0).** The `[tables]` and `[ocr]` extras install PyMuPDF, dual-licensed under AGPL-3.0 or an
-  Artifex commercial license. For personal local use nothing changes; if you hand a build to others or run it as a
-  network service, AGPL applies. Without PyMuPDF only wide PDF tables read by coordinates are unavailable. Details
-  and options are in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+- **Dependency licenses.** All Python dependencies (extras included) use permissive licenses (MIT, BSD,
+  Apache-2.0); there are no AGPL components. The only copyleft (GPL) piece is the external poppler program, which
+  is run as a separate process and is not part of the distribution. Details are in
+  [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) (Russian).
 - OCR uses tesseract: poor scans and handwritten insertions distort numbers, so every number is checked with
   `ru-corpus number`.
 - The "not in the corpus" refusal depends on lexical overlap between the question and the corpus: a broad wording

@@ -32,7 +32,7 @@ ru-corpus number d0001 1 "1 234 567,89"                 # 该数字是否逐字�
 ```
 
 PyPI 上的包名为 `ru-corpus-kit`（发布后可直接 `pip install "ru-corpus-kit[tables,ocr]"`）。不带 extras 时只安装核心。
-关于 `[tables]` 和 `[ocr]`，请见“限制”一节：它们会引入一个 AGPL 许可的库。
+`[tables]` 和 `[ocr]` 引入的是 pdfplumber、pypdfium2 和 Pillow，均为宽松许可证。
 
 ### 接入智能体
 
@@ -74,9 +74,9 @@ cd demo && ru-corpus index && python3 check_questions.py   # 预期：6/6 个问
 
 ## 限制
 
-- **PyMuPDF（AGPL-3.0）。** extras `[tables]` 和 `[ocr]` 会安装 PyMuPDF，其采用双重许可：AGPL-3.0 或 Artifex 商业许可。
-  个人本地使用不受影响；若将构建分发给他人或作为网络服务运行，则须遵守 AGPL。没有 PyMuPDF 时，仅无法按坐标读取 PDF 宽表。
-  详情与方案见 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)（俄文）。
+- **依赖许可证。** 所有 Python 依赖（含 extras）均采用宽松许可证（MIT、BSD、Apache-2.0），不含 AGPL 组件。
+  唯一的 copyleft（GPL）组件是外部程序 poppler，它作为独立进程调用，不包含在发行内容中。
+  详情见 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)（俄文）。
 - OCR 使用 tesseract：质量差的扫描件和手写补充内容会导致数字失真，因此每个数字都要用 `ru-corpus number` 核对。
 - “语料库中没有”的判断取决于问题与语料库的词汇重合度：含大量通用词的宽泛提问可能得到错误的“有证据”（已记录在 `demo/README.md`）。
 - 内置一个行业配置 `tso_disclosure`（电网企业信息披露）；其他行业需要自行编写配置（`corpus.toml` 中的 `[profile]`）。
