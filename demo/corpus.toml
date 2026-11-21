@@ -1,0 +1,49 @@
+# corpus.toml — настройки корпуса для ru-corpus
+# Относительные пути считаются от каталога, где лежит этот файл.
+
+[corpus]
+# Каталог с документами (PDF, DOCX, XLSX, сканы…)
+root = "corpus"
+# Префикс, с которого начинаются ссылки на источник в выводе (поля file и origin):
+# итог — «<префикс><относительный путь файла>». Можно оставить пустым.
+source_prefix = "demo/corpus/"
+
+[index]
+# Куда складывать индекс (kb.sqlite, bm25.sqlite, registry.csv)
+dir = ".index"
+# Готовые реестры CSV (колонки id, rel_path, title, section, type, year, ext, sha256);
+# если пусто — реестр строится сам и лежит в registry.csv внутри индекса.
+registry = []
+# Реестры документов, извлечённых из архивов (в карточке документа from_archive = true)
+archive_registry = []
+# Явные пути к уже построенным базам (для открытия чужого индекса без переиндексации)
+# kb = ""
+# bm25 = ""
+extensions = [".pdf", ".docx", ".xlsx", ".xlsm", ".xls", ".pptx", ".doc", ".txt", ".md", ".csv", ".json"]
+# Маски путей (относительно корня), которые пропускаются
+exclude = ["README.md", "MANIFEST.csv", "**/.git/**", "**/node_modules/**", "**/.venv/**", "**/~$*"]
+max_size_mb = 0            # 0 — без ограничения
+ocr = true                 # распознавать сканы (нужен tesseract и extras [ocr])
+ocr_dpi = 300
+ocr_psm = 4
+ocr_workers = 4
+ocr_langs = "rus+eng"
+tables = true              # таблицы PDF с сеткой (extras [tables])
+wide_tables = true         # широкие альбомные таблицы по координатам (extras [tables])
+bm25_window = 96           # токенов во фрагменте
+bm25_overlap = 16
+
+[search]
+# Файл со словарём сокращений (TOML, таблица [synonyms]); пусто — словарь из профиля, если он есть
+synonyms = ""
+# Пороги «в корпусе нет»: ответ отказывает, когда обе ветки ниже порогов
+fts_coverage = 0.75
+bm25_best_doc = 0.6
+bm25_miss = 0.2
+# Разделы корпуса (первая папка), документы которых — производный слой: в выдаче они идут ниже первичных
+derived_sections = []
+rerank = false             # кросс-энкодер поверх BM25 (extras [rerank])
+
+[profile]
+# Отраслевой профиль: встроенный (например "tso_disclosure") или путь к каталогу профиля. Пусто — только ядро.
+name = ""

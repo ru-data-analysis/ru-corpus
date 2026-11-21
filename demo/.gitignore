@@ -1,0 +1,7 @@
+# индекс ru-corpus и временные файлы
+.index/
+__pycache__/
+# синтетика генерируется скриптом make_synthetic.py
+corpus/synthetic/
+*.part
+*.mismatch
