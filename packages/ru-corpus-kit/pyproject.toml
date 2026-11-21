@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ru-corpus-kit"
+version = "0.1.0"
+description = "Русский поиск и проверяемая аналитика по корпусу документов: индексация, поиск BM25 по леммам, таблицы, числа"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "ru-corpus contributors" }]
+keywords = ["russian", "search", "bm25", "corpus", "ocr", "tables"]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Natural Language :: Russian",
+]
+dependencies = [
+    "pymorphy3>=1.2",
+    "openpyxl>=3.1",
+    "tomli>=2.0; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+# OCR сканов: tesseract (rus) должен стоять в системе; здесь только Python-часть
+ocr = ["pillow>=10", "pymupdf>=1.24"]
+# таблицы PDF: сетки (pdfplumber) и широкие таблицы по координатам (PyMuPDF)
+tables = ["pdfplumber>=0.11", "pymupdf>=1.24"]
+# повторное ранжирование кросс-энкодером
+rerank = ["sentence-transformers>=3"]
+# старые форматы и презентации
+office = ["xlrd>=2.0", "python-pptx>=1.0", "python-docx>=1.1"]
+test = ["pytest>=8", "pillow>=10", "pymupdf>=1.24", "pdfplumber>=0.11", "python-docx>=1.1"]
+
+[project.scripts]
+ru-corpus = "ru_corpus_kit.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ru_corpus_kit = ["profiles/*/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

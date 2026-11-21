@@ -7,3 +7,7 @@ node_modules/
 .kb/
 .cache/
 index/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
