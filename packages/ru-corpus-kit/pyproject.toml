@@ -46,3 +46,7 @@ ru_corpus_kit = ["profiles/*/*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+[project.urls]
+Homepage = "https://github.com/ru-data-analysis/ru-corpus"
+Issues = "https://github.com/ru-data-analysis/ru-corpus/issues"

@@ -5,12 +5,25 @@
   "type": "module",
   "main": "./lib/index.js",
   "exports": {
-    ".": { "default": "./lib/index.js" },
+    ".": {
+      "default": "./lib/index.js"
+    },
     "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json"
   },
-  "files": ["lib", "cordis.patch.yml", "README.md", "LICENSE"],
-  "keywords": ["dsh-plugin", "deepseek-harness", "russian", "corpus", "search"],
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "russian",
+    "corpus",
+    "search"
+  ],
   "license": "Apache-2.0",
   "author": "ru-corpus contributors",
   "scripts": {
@@ -19,5 +32,18 @@
   "peerDependencies": {
     "@deepseek-ai/dsh-tools": ">=0.2.0-rc.2 <0.3.0"
   },
-  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ru-data-analysis/ru-corpus.git",
+    "directory": "packages/dsh-ru-corpus"
+  },
+  "homepage": "https://github.com/ru-data-analysis/ru-corpus#readme",
+  "bugs": {
+    "url": "https://github.com/ru-data-analysis/ru-corpus/issues"
+  }
 }
