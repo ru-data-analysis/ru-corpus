@@ -15,3 +15,30 @@ jobs:
           python-version: "3.12"
       - name: Проверка вычистки
         run: python3 scripts/scrub_check.py
+
+  kit:
+    name: kit (${{ matrix.os }}, py${{ matrix.python }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.10", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Системные пакеты (poppler, tesseract с русским)
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get install -y poppler-utils tesseract-ocr tesseract-ocr-rus tesseract-ocr-eng tesseract-ocr-osd
+          else
+            brew install poppler tesseract tesseract-lang
+          fi
+          tesseract --list-langs
+      - name: Установка пакета с extras
+        run: python -m pip install -e "packages/ru-corpus-kit[tables,ocr,test]"
+      - name: Тесты ru-corpus-kit
+        run: python -m pytest packages/ru-corpus-kit/tests
