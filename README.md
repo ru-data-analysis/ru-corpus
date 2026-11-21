@@ -8,3 +8,7 @@
 - `skills/corpus-analytics-ru` — навык SKILL.md: методика проверяемой аналитики по корпусу (каждая цифра — с документом и страницей);
 - `packages/dsh-ru-corpus` — плагин DeepSeek Harness с инструментами корпуса;
 - `packages/ru-corpus-kit` — ядро на Python: индексация и инструменты `ru-corpus`.
+
+Лицензия — Apache-2.0 (см. `LICENSE`, `NOTICE`). Сделано с помощью Claude (Anthropic).
+
+Проверка вычистки: `python3 scripts/scrub_check.py` (запускается в CI на каждый push).
