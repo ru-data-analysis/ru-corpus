@@ -64,6 +64,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: Установка ядра
-        run: python -m pip install -e "packages/ru-corpus-kit[tables]"
+        run: python -m pip install -e "packages/ru-corpus-kit[tables,test]"
       - name: Тест плагина dsh-ru-corpus (заглушка хоста, синтетический корпус)
         run: node packages/dsh-ru-corpus/test/mock-host.mjs
