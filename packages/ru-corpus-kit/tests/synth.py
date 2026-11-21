@@ -1,22 +1,61 @@
 # -*- coding: utf-8 -*-
 """Синтетический корпус для тестов: вымышленная организация «АО «Демо-Сеть»», вымышленные числа.
 
-Файлы генерируются кодом (PDF — PyMuPDF, XLSX — openpyxl, DOCX — python-docx), в репозитории
-нет ни одного документа.
+Файлы генерируются кодом (PDF — reportlab со шрифтом DejaVu Sans из tests/fonts/, сканы — Pillow,
+XLSX — openpyxl, DOCX — python-docx), в репозитории нет ни одного документа.
+Координаты в helper-ах — от верхнего левого угла страницы, в пунктах (как в разметке PDF-вьюеров).
 """
 from __future__ import annotations
 
 from pathlib import Path
 
-import pymupdf
+from reportlab.lib.colors import black
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 
-FONT = pymupdf.Font("helv")          # встроенный шрифт с кириллицей
+FONT_FILE = Path(__file__).resolve().parent / "fonts" / "DejaVuSans.ttf"
+FONT = "DejaVuSans"
+pdfmetrics.registerFont(TTFont(FONT, str(FONT_FILE)))
 
 
-def _text(page, x, y, s, size=11):
-    tw = pymupdf.TextWriter(page.rect)
-    tw.append((x, y), s, font=FONT, fontsize=size)
-    tw.write_text(page)
+class Doc:
+    """Тонкая обёртка над canvas reportlab: страницы разного размера, y — сверху вниз."""
+
+    def __init__(self, path):
+        self.c = canvas.Canvas(str(path))
+        self._open = False
+        self.w = self.h = 0
+
+    def new_page(self, width=595, height=842, rotate=0):
+        if self._open:
+            self.c.showPage()
+        self.w, self.h = width, height
+        self.c.setPageSize((width, height))
+        if rotate:
+            self.c.setPageRotation(rotate)
+        self._open = True
+        return self
+
+    def save(self):
+        if self._open:
+            self.c.showPage()
+        self.c.save()
+
+
+def _text(page, x, y, s, size=11, vertical=False):
+    """Строка с базовой линией в (x, y); vertical — текст снизу вверх (повёрнут на 90°)."""
+    c = page.c
+    c.setFont(FONT, size)
+    c.setFillColor(black)
+    if vertical:
+        c.saveState()
+        c.translate(x, page.h - y)
+        c.rotate(90)
+        c.drawString(0, 0, s)
+        c.restoreState()
+    else:
+        c.drawString(x, page.h - y, s)
 
 
 def lines_page(doc, lines, size=11, landscape=False):
@@ -28,12 +67,18 @@ def lines_page(doc, lines, size=11, landscape=False):
     return page
 
 
-def grid(page, cells, size=9):
-    """cells: [(x0, y0, x1, y1, текст)] — рамка ячейки + текст внутри."""
+def grid(page, cells, size=9, vertical_rows=()):
+    """cells: [(x0, y0, x1, y1, текст)] — рамка ячейки + текст внутри.
+    vertical_rows — набор y0 строк, текст которых пишется повёрнутым (шапка с вертикальными подписями)."""
+    page.c.setStrokeColor(black)
+    page.c.setLineWidth(0.6)
     for x0, y0, x1, y1, t in cells:
-        page.draw_rect(pymupdf.Rect(x0, y0, x1, y1), color=(0, 0, 0), width=0.6)
+        page.c.rect(x0, page.h - y1, x1 - x0, y1 - y0, stroke=1, fill=0)
         if t:
-            _text(page, x0 + 3, y1 - 6, t, size)
+            if y0 in vertical_rows:
+                _text(page, x0 + 9, y1 - 4, t, size, vertical=True)
+            else:
+                _text(page, x0 + 3, y1 - 6, t, size)
 
 
 def simple_table(page, x0, y0, widths, row_h, rows, size=9):
@@ -49,7 +94,7 @@ def simple_table(page, x0, y0, widths, row_h, rows, size=9):
 
 def make_report(path: Path):
     """Годовой отчёт: текст со «сложным» числом, таблица с сеткой, таблица со ставками по уровням."""
-    doc = pymupdf.open()
+    doc = Doc(path)
     lines_page(doc, [
         "АО «Демо-Сеть»",
         "Годовой отчёт за 2024 год",
@@ -71,19 +116,28 @@ def make_report(path: Path):
         ["Ставка на содержание сетей", "1 234,5", "2 345,6", "3 456,7", "руб./МВт·мес."],
         ["Ставка на оплату потерь", "456,1", "567,2", "678,3", "руб./МВт·ч"],
     ])
-    doc.save(str(path))
+    doc.save()
 
 
-def make_wide(path: Path):
-    """Приказ с широкой альбомной таблицей: объединённая шапка «Финансирование» над пятью годами."""
-    doc = pymupdf.open()
+def make_wide(path: Path, page_rotate: int = 0, vertical_years: bool = False):
+    """Приказ с широкой альбомной таблицей: объединённая шапка «Финансирование» над пятью годами.
+
+    page_rotate=90 — таблица на странице с атрибутом /Rotate 90 (книжный лист, показывается альбомным);
+    vertical_years — подписи лет в шапке повёрнуты на 90° (в высокой строке шапки)."""
+    doc = Doc(path)
     lines_page(doc, [
         "ПРИКАЗ",
         "от 01.12.2024 № 77-ТР",
         "Об утверждении инвестиционной программы АО «Демо-Сеть» на 2025–2029 годы",
         "Приложение № 1. План финансирования мероприятий.",
     ], landscape=True)
-    page = doc.new_page(width=842, height=595)
+    vh = 36 if vertical_years else 0                     # добавочная высота строки лет
+    if page_rotate == 90:
+        page = doc.new_page(width=595, height=842, rotate=90)
+        page.c.transform(0, 1, -1, 0, 595, 0)            # дальше рисуем в системе показанной (альбомной) страницы
+        page.w, page.h = 842, 595
+    else:
+        page = doc.new_page(width=842, height=595)
     _text(page, 30, 40, "Таблица 3. План финансирования инвестиционной программы", 10)
     x = 30
     cols = [(x, x + 40), (x + 40, x + 270)]
@@ -92,42 +146,43 @@ def make_wide(path: Path):
     ycols = [(year_x0 + 70 * i, year_x0 + 70 * (i + 1)) for i in range(5)]
     tot = (year_x0 + 350, year_x0 + 430)
     cells = [
-        (cols[0][0], 60, cols[0][1], 100, "№ п/п"),
-        (cols[1][0], 60, cols[1][1], 100, "Наименование мероприятия"),
+        (cols[0][0], 60, cols[0][1], 100 + vh, "№ п/п"),
+        (cols[1][0], 60, cols[1][1], 100 + vh, "Наименование мероприятия"),
         (ycols[0][0], 60, ycols[-1][1], 80, "Финансирование, тыс. руб."),
-        (tot[0], 60, tot[1], 100, "Итого"),
+        (tot[0], 60, tot[1], 100 + vh, "Итого"),
     ]
-    cells += [(a, 80, b, 100, y) for (a, b), y in zip(ycols, years)]
+    cells += [(a, 80, b, 100 + vh, y) for (a, b), y in zip(ycols, years)]
     nums = ["1", "2", "3", "4", "5", "6", "7", "8"]
     allc = [cols[0], cols[1]] + ycols + [tot]
-    cells += [(a, 100, b, 116, n) for (a, b), n in zip(allc, nums)]
+    cells += [(a, 100 + vh, b, 116 + vh, n) for (a, b), n in zip(allc, nums)]
     data = [
         ("1.1", "Строительство подстанции ПС-1", ["100,5", "200,0", "300,0", "400,0", "500,0", "1 500,5"]),
         ("1.2", "Реконструкция кабельных линий", ["50,0", "60,0", "70,0", "80,0", "90,0", "350,0"]),
         ("1.3", "Установка приборов учёта", ["10,0", "20,0", "30,0", "40,0", "50,0", "150,0"]),
     ]
-    y = 116
+    y = 116 + vh
     for no, name, vals in data:
         row = [no, name] + vals
         cells += [(a, y, b, y + 22, t) for (a, b), t in zip(allc, row)]
         y += 22
-    grid(page, cells, 9)
-    doc.save(str(path))
+    grid(page, cells, 9, vertical_rows=(80,) if vertical_years else ())
+    doc.save()
 
 
 def make_scan(path: Path, rotate: int = 0):
     """Скан: страница-картинка без текстового слоя; rotate — повернуть картинку (90/180/270)."""
-    src = pymupdf.open()
-    pg = src.new_page()
+    from PIL import Image, ImageDraw, ImageFont
+    dpi, k = 200, 200 / 72
+    img = Image.new("L", (round(595 * k), round(842 * k)), 255)
+    d = ImageDraw.Draw(img)
+    font = ImageFont.truetype(str(FONT_FILE), round(30 * k))
     y = 150
     for ln in ["Договор поставки кабеля", "заключён пятнадцатого июня", "между поставщиком и сетевой компанией"]:
-        _text(pg, 60, y, ln, 30)
+        d.text((round(60 * k), round(y * k)), ln, font=font, fill=0, anchor="ls")
         y += 70
-    pix = pg.get_pixmap(dpi=200, colorspace=pymupdf.csGRAY)
-    out = pymupdf.open()
-    page = out.new_page()
-    page.insert_image(page.rect, stream=pix.tobytes("png"), rotate=rotate)
-    out.save(str(path))
+    if rotate:
+        img = img.rotate(rotate, expand=True, fillcolor=255)
+    img.save(str(path), "PDF", resolution=dpi)
 
 
 def make_xlsx(path: Path, scale: float = 1.0):

@@ -19,7 +19,7 @@ RULES = [
     ("токен бота Telegram", re.compile(r"\b\d{9,10}:AA[A-Za-z0-9_-]{30,}")),
     ("переменная с секретом", re.compile(r"(API_KEY|TOKEN|SECRET|PASSWORD)\s*=\s*['\"]?[A-Za-z0-9_\-]{16,}")),
 ]
-BINARY = {".png", ".jpg", ".jpeg", ".pdf", ".xlsx", ".docx", ".zip", ".sqlite", ".gz"}
+BINARY = {".ttf", ".png", ".jpg", ".jpeg", ".pdf", ".xlsx", ".docx", ".zip", ".sqlite", ".gz"}
 
 
 def tracked():
