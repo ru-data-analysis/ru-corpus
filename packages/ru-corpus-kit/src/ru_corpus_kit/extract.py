@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Извлечение текста по страницам: PDF (текстовый слой, OCR сканов), DOCX, XLSX/XLS, PPTX, текст.
 
-PDF: pdftotext (poppler), а без него — PyMuPDF. Скан (текстового слоя почти нет) распознаётся
+PDF: pdftotext (poppler), а без него — pdfplumber. Скан (текстового слоя почти нет) распознаётся
 tesseract с определением ориентации страницы (OSD, затем повороты 180/90/270 по «похожести на русский
 текст»). Страница XLSX — лист: строки «ячейка | ячейка», пустые ячейки на своих местах.
 """
@@ -50,24 +50,10 @@ def ocr_ready(langs: str = "rus+eng") -> str | None:
         return "нужен Pillow: pip install 'ru-corpus-kit[ocr]'"
     if not shutil.which("pdftoppm"):
         try:
-            import pymupdf  # noqa: F401
+            import pypdfium2  # noqa: F401
         except ImportError:
-            try:
-                import fitz  # noqa: F401
-            except ImportError:
-                return "нужен pdftoppm (poppler) или PyMuPDF"
+            return "нужен pdftoppm (poppler) или pypdfium2: pip install 'ru-corpus-kit[ocr]'"
     return None
-
-
-def _fitz():
-    try:
-        import pymupdf as f
-    except ImportError:
-        try:
-            import fitz as f
-        except ImportError:
-            return None
-    return f
 
 
 def pdf_text_layer(path: Path):
@@ -78,11 +64,12 @@ def pdf_text_layer(path: Path):
             raise RuntimeError(r.stderr.strip()[:200])
         pages = [p.strip() for p in r.stdout.split("\f")]
     else:
-        f = _fitz()
-        if f is None:
-            raise RuntimeError("для PDF нужен pdftotext (poppler) или PyMuPDF")
-        with f.open(path) as d:
-            pages = [p.get_text("text").strip() for p in d]
+        try:
+            import pdfplumber
+        except ImportError:
+            raise RuntimeError("для PDF нужен pdftotext (poppler) или pdfplumber") from None
+        with pdfplumber.open(path) as d:
+            pages = [(p.extract_text() or "").strip() for p in d.pages]
     while pages and not pages[-1]:
         pages.pop()
     return pages
@@ -93,11 +80,21 @@ def pdf_page_count(path: Path, fallback: int = 1) -> int:
         m = re.search(r"^Pages:\s+(\d+)", run(["pdfinfo", str(path)]).stdout, re.M)
         if m:
             return int(m.group(1))
-    f = _fitz()
-    if f is not None:
-        with f.open(path) as d:
-            return d.page_count
-    return max(1, fallback)
+    try:
+        import pypdfium2
+        d = pypdfium2.PdfDocument(str(path))
+        try:
+            return len(d)
+        finally:
+            d.close()
+    except Exception:
+        pass
+    try:
+        import pdfplumber
+        with pdfplumber.open(path) as d:
+            return len(d.pages)
+    except Exception:
+        return max(1, fallback)
 
 
 def pdf_text(path: Path):
@@ -141,13 +138,16 @@ def _render_pages(path: Path, td: Path, dpi: int, total: int):
     if shutil.which("pdftoppm"):
         run(["pdftoppm", "-r", str(dpi), "-gray", "-png", "-f", "1", "-l", str(total), str(path), str(base)])
         return sorted(td.glob("p-*.png"))
-    f = _fitz()
+    import pypdfium2
     out = []
-    with f.open(path) as d:
-        for i in range(min(total, d.page_count)):
+    d = pypdfium2.PdfDocument(str(path))
+    try:
+        for i in range(min(total, len(d))):
             img = td / f"p-{i + 1:04d}.png"
-            d[i].get_pixmap(dpi=dpi, colorspace=f.csGRAY).save(str(img))
+            d[i].render(scale=dpi / 72).to_pil().convert("L").save(str(img))
             out.append(img)
+    finally:
+        d.close()
     return out
 
 
