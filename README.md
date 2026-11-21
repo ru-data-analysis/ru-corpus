@@ -7,7 +7,7 @@
 - `skills/russian-corpus-search` — навык SKILL.md: русский поиск по локальному корпусу (леммы, синонимы, OCR сканов, таблицы);
 - `skills/corpus-analytics-ru` — навык SKILL.md: методика проверяемой аналитики по корпусу (каждая цифра — с документом и страницей);
 - `packages/dsh-ru-corpus` — плагин DeepSeek Harness с инструментами корпуса;
-- `packages/ru-corpus-kit` — ядро на Python: индексация и инструменты `ru-corpus`.
+- `packages/ru-corpus-kit` — ядро на Python: индексация и инструменты `ru-corpus` (см. README пакета).
 
 Лицензия — Apache-2.0 (см. `LICENSE`, `NOTICE`). Сделано с помощью Claude (Anthropic).
 
