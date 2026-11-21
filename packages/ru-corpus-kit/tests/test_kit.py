@@ -150,7 +150,7 @@ def test_table_wide_columns_and_years(built):
 
 def test_wide_module_geometry(built):
     if not wide.available():
-        pytest.skip("нет PyMuPDF")
+        pytest.skip("нет pdfplumber")
     res = wide.process_pdf(built["files"]["wide"], dims=T.Dims(Profile.empty()))
     assert res[2]["wide"] and not res.get(1, {"wide": False})["wide"]
     cells = res[2]["cells"]
@@ -159,8 +159,26 @@ def test_wide_module_geometry(built):
     assert any(c["level"] == "Всего" and c["raw"] == "350,0" for c in cells)     # графа «Итого»
 
 
+@pytest.mark.parametrize("page_rotate,vertical_years", [(90, False), (0, True), (90, True)])
+def test_wide_rotated_page_and_vertical_header(tmp_path, page_rotate, vertical_years):
+    """Лист с /Rotate 90 и подписи лет, повёрнутые на 90°: те же ячейки, те же пути граф."""
+    if not wide.available():
+        pytest.skip("нет pdfplumber")
+    import synth
+    pdf = tmp_path / "w.pdf"
+    synth.make_wide(pdf, page_rotate=page_rotate, vertical_years=vertical_years)
+    res = wide.process_pdf(pdf, dims=T.Dims(Profile.empty()))
+    assert res[2]["wide"]
+    cells = res[2]["cells"]
+    got = {(c["label"], c["year"]): c["raw"] for c in cells if c["year"]}
+    assert got[("1.2 Реконструкция кабельных линий", 2027)] == "70,0"
+    assert got[("1.1 Строительство подстанции ПС-1", 2029)] == "500,0"
+    c = next(c for c in cells if c["raw"] == "200,0")
+    assert c["header"] == "Финансирование, тыс. руб. / 2026" and c["unit"].startswith("тыс.")
+    assert any(c["level"] == "Всего" and c["raw"] == "350,0" for c in cells)
+
+
 def test_wide_cells_written_as_bbox(tmp_path):
-    import pymupdf  # noqa: F401
     from ru_corpus_kit import store
     cfg, files = make_project(tmp_path, scan=False)
     db = store.open_rw(tmp_path / "t.sqlite")

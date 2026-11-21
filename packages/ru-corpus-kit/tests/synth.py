@@ -122,7 +122,7 @@ def make_report(path: Path):
 def make_wide(path: Path, page_rotate: int = 0, vertical_years: bool = False):
     """Приказ с широкой альбомной таблицей: объединённая шапка «Финансирование» над пятью годами.
 
-    page_rotate=90 — таблица на странице с атрибутом /Rotate 90 (книжный лист, показывается альбомным);
+    page_rotate=90 — таблица на листе с атрибутом /Rotate 90 (в файле лист книжный, показывается альбомным);
     vertical_years — подписи лет в шапке повёрнуты на 90° (в высокой строке шапки)."""
     doc = Doc(path)
     lines_page(doc, [
@@ -133,9 +133,8 @@ def make_wide(path: Path, page_rotate: int = 0, vertical_years: bool = False):
     ], landscape=True)
     vh = 36 if vertical_years else 0                     # добавочная высота строки лет
     if page_rotate == 90:
-        page = doc.new_page(width=595, height=842, rotate=90)
+        page = doc.new_page(width=842, height=595, rotate=90)   # reportlab принимает размер показанной страницы
         page.c.transform(0, 1, -1, 0, 595, 0)            # дальше рисуем в системе показанной (альбомной) страницы
-        page.w, page.h = 842, 595
     else:
         page = doc.new_page(width=842, height=595)
     _text(page, 30, 40, "Таблица 3. План финансирования инвестиционной программы", 10)
