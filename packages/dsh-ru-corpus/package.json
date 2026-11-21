@@ -1,0 +1,23 @@
+{
+  "name": "dsh-ru-corpus",
+  "version": "0.1.0",
+  "description": "Плагин DeepSeek Harness: русский поиск и проверяемая аналитика по корпусу документов — методика в системном промте и инструменты corpus_search, corpus_page, corpus_table, corpus_doc, corpus_number, corpus_aggregate, corpus_calc поверх команды ru-corpus.",
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": { "default": "./lib/index.js" },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": ["lib", "cordis.patch.yml", "README.md", "LICENSE"],
+  "keywords": ["dsh-plugin", "deepseek-harness", "russian", "corpus", "search"],
+  "license": "Apache-2.0",
+  "author": "ru-corpus contributors",
+  "scripts": {
+    "test": "node test/mock-host.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-tools": ">=0.2.0-rc.2 <0.3.0"
+  },
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
+}

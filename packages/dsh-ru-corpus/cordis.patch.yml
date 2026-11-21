@@ -1,0 +1,13 @@
+# dsh-ru-corpus: методика аналитики и инструменты корпуса (команда ru-corpus из ru-corpus-kit).
+- insert:
+    - id: ru-corpus
+      name: 'dsh-ru-corpus'
+      config:
+        # false — не монтировать ничего (ни промта, ни инструментов)
+        enabled: true
+        # команда ядра; можно с аргументами, например «python3 -m ru_corpus_kit.cli»
+        command: ru-corpus
+        # путь к corpus.toml; пусто — ищется в папке сессии и выше (или RU_CORPUS_CONFIG)
+        config: ''
+        # потолок одного вызова, мс
+        timeoutMs: 180000
