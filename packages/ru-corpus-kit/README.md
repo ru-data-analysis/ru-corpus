@@ -1,5 +1,7 @@
 # ru-corpus-kit
 
+> Обзор проекта, быстрый старт и лицензии — в корневом [README](../../README.md) ([English](../../README.en.md), [中文](../../README.zh.md)).
+
 Ядро инструментов русского корпуса документов: индексация (PDF, сканы, DOCX, XLSX…), поиск BM25 по леммам,
 таблицы с графами и годами, точные числа, агрегаты. Консольная команда — `ru-corpus`. Каждый ответ —
 JSON с документом, страницей и якорем, либо честное «в корпусе нет».
@@ -18,6 +20,8 @@ pip install -e "packages/ru-corpus-kit[ocr]"     # + OCR сканов (Pillow, P
 pip install -e "packages/ru-corpus-kit[rerank]"  # + кросс-энкодер (sentence-transformers) для --rerank
 pip install -e "packages/ru-corpus-kit[office]"  # + .xls и .pptx без LibreOffice (xlrd, python-pptx)
 ```
+
+Лицензия: `pymupdf` из extras `tables` и `ocr` — AGPL-3.0 или коммерческая (см. [THIRD_PARTY_LICENSES.md](../../THIRD_PARTY_LICENSES.md)).
 
 Системные программы: `pdftotext` из poppler (если его нет, текст PDF берёт PyMuPDF), `tesseract` для сканов
 (`brew install poppler tesseract tesseract-lang` / `apt install poppler-utils tesseract-ocr tesseract-ocr-rus`).

@@ -1,75 +1,102 @@
+**Русский** · [English](README.en.md) · [中文](README.zh.md)
+
 # ru-corpus
 
-Русский поиск и проверяемая аналитика по корпусу документов — массиву данных и информации (PDF, сканы,
-таблицы, архивы), по которому работает агент. Каждая цифра — с документом и страницей, а там, где ответа нет,
-честное «в корпусе нет».
+## Что это
 
-Состав:
+Русский поиск и проверяемая аналитика по корпусу документов — массиву данных и информации (PDF, сканы,
+таблицы, архивы), по которому работает ИИ-агент. Каждая цифра приходит с документом и страницей, а там,
+где ответа нет, агент честно говорит «в корпусе нет». Всё работает локально: индекс лежит рядом с документами.
+
+## Состав
 
 - `packages/ru-corpus-kit` — ядро на Python: индексация и команда `ru-corpus` (init, index, status, search,
-  page, table, doc, number, aggregate, calc); см. README пакета;
-- `packages/dsh-ru-corpus` — плагин DeepSeek Harness: методика в системном промте и семь инструментов
+  page, table, doc, number, aggregate, calc); поиск BM25 по леммам, OCR сканов, таблицы с графами и годами;
+- `packages/dsh-ru-corpus` — плагин DeepSeek Harness (DSH): методика в системном промте и семь инструментов
   `corpus_*` поверх `ru-corpus`;
-- `skills/russian-corpus-search` — навык SKILL.md: русский поиск по локальному корпусу (леммы, синонимы,
-  OCR сканов, таблицы);
-- `skills/corpus-analytics-ru` — навык SKILL.md: методика проверяемой аналитики по корпусу; отраслевой
-  справочник по раскрытию информации сетевых организаций лежит в `references/tso-disclosure.md`;
-- `.claude-plugin/marketplace.json` — маркетплейс плагинов Claude Code с обоими навыками.
+- `skills/russian-corpus-search` и `skills/corpus-analytics-ru` — навыки `SKILL.md`: русский поиск и
+  методика проверяемой аналитики; отраслевой справочник по раскрытию информации сетевых организаций —
+  `skills/corpus-analytics-ru/references/tso-disclosure.md`;
+- `plugins/claude-ru-corpus` — плагин Claude Code с копиями навыков (обновляются скриптом
+  `scripts/sync_claude_plugin.py`); `.claude-plugin/marketplace.json` — маркетплейс;
+- `demo` — демо-корпус из 15 официальных актов и 6 контрольных вопросов.
 
-## Начало работы: ядро и корпус
+## Быстрый старт
 
-Инструменты агента вызывают команду `ru-corpus`, поэтому ядро нужно установить в любом случае (Python 3.10+):
-
-```bash
-git clone https://github.com/ru-data-analysis/ru-corpus && cd ru-corpus
-pip install -e "packages/ru-corpus-kit[tables]"      # + [ocr] для сканов (нужен tesseract с rus)
-
-cd папка-проекта
-ru-corpus init --root ./документы --prefix "корпус/"   # создаёт corpus.toml
-ru-corpus index                                        # индекс документов
-ru-corpus search "выручка за 2024 год"                 # проверка
-```
-
-Инструменты работают в папке сессии, в которой или выше которой лежит `corpus.toml`.
-
-## Для DeepSeek Harness
-
-Плагин `dsh-ru-corpus` добавляет раздел системного промта с методикой и инструменты `corpus_search`,
-`corpus_page`, `corpus_table`, `corpus_doc`, `corpus_number`, `corpus_aggregate`, `corpus_calc`.
+Нужен Python 3.10+. Для сканов — `tesseract` с языком `rus`, для текста PDF — `pdftotext` из poppler
+(`brew install poppler tesseract tesseract-lang` или `apt install poppler-utils tesseract-ocr tesseract-ocr-rus`).
 
 ```bash
-# пока из локальной папки клона
-dsh plugin --profile web add link:/путь/к/ru-corpus/packages/dsh-ru-corpus
-
-# после публикации в npm
-dsh plugin --profile web add dsh-ru-corpus
+pip install "ru-corpus-kit[tables,ocr] @ git+https://github.com/ru-data-analysis/ru-corpus#subdirectory=packages/ru-corpus-kit"
+ru-corpus init --root ./документы --prefix "корпус/"    # создаёт corpus.toml
+ru-corpus index                                         # индекс: текст, OCR, леммы, таблицы
+ru-corpus search "выручка за 2024 год"                  # доказательства: файл, страница, фрагмент
+ru-corpus number d0001 1 "1 234 567,89"                 # стоит ли число дословно на странице
 ```
 
-Настройки (`command`, `config`, `timeoutMs`, `enabled`) и проверка без DSH (`node test/mock-host.mjs`) —
-в `packages/dsh-ru-corpus/README.md`.
+Имя пакета на PyPI — `ru-corpus-kit` (после публикации: `pip install "ru-corpus-kit[tables,ocr]"`). Без extras
+ставится только ядро. Об `[tables]` и `[ocr]` см. «Ограничения»: они тянут библиотеку под AGPL.
 
-## Для Claude Code
+### Подключение к агенту
+
+DeepSeek Harness:
+
+```bash
+dsh plugin --profile web add "file:/путь/к/ru-corpus/packages/dsh-ru-corpus"
+```
+
+Claude Code:
 
 ```text
 /plugin marketplace add ru-data-analysis/ru-corpus
 /plugin install ru-corpus@ru-corpus
 ```
 
-Плагин ставит оба навыка: `russian-corpus-search` и `corpus-analytics-ru`. Команды `ru-corpus` навыки
-вызывают из консоли, поэтому ядро (раздел выше) должно быть установлено.
-
-## Навыки SKILL.md
-
-Навыки — обычные папки со `SKILL.md`, их читают разные агенты:
+Навыки `SKILL.md` для любого агента (skills.sh):
 
 ```bash
 npx skills add ru-data-analysis/ru-corpus
 ```
 
-Или скопируйте `skills/russian-corpus-search` и `skills/corpus-analytics-ru` в каталог навыков своего агента.
+Инструменты и навыки вызывают команду `ru-corpus`, поэтому ядро нужно установить в любом случае. Они работают
+в папке сессии, в которой или выше которой лежит `corpus.toml`. Настройки плагина DSH и проверка без DSH —
+в `packages/dsh-ru-corpus/README.md`.
 
-## Лицензия и проверки
+## Демо-корпус и проверка
 
-Лицензия — Apache-2.0 (см. `LICENSE`, `NOTICE`). Сделано с помощью Claude (Anthropic).
+`demo/` — 15 официальных актов органов власти по электроэнергетике и тарифам (не объекты авторского права,
+п. 6 ст. 1259 ГК РФ; источники и SHA-256 — в `demo/corpus/MANIFEST.csv`) плюс вымышленный синтетический набор,
+который создаёт генератор. К корпусу приложены 5 вопросов с проверенными ответами и одна ловушка («в корпусе нет»).
 
-Проверка вычистки: `python3 scripts/scrub_check.py` (запускается в CI на каждый push). Тесты ядра: `pytest packages/ru-corpus-kit/tests`; плагина: `node packages/dsh-ru-corpus/test/mock-host.mjs`.
+```bash
+pip install -e "packages/ru-corpus-kit[tables,ocr,test]"
+python3 demo/make_synthetic.py                             # синтетика
+cd demo && ru-corpus index && python3 check_questions.py   # ожидается: 6/6 вопросов прошли
+```
+
+Прочие проверки: `python3 scripts/scrub_check.py` (вычистка), `python3 scripts/sync_claude_plugin.py --check`
+(копии навыков), `pytest packages/ru-corpus-kit/tests`, `node packages/dsh-ru-corpus/test/mock-host.mjs`.
+
+## Ограничения
+
+- **PyMuPDF (AGPL-3.0).** Extras `[tables]` и `[ocr]` устанавливают PyMuPDF — двойная лицензия: AGPL-3.0 или
+  коммерческая Artifex. Для личного локального использования это ничего не меняет; при передаче сборки другим
+  или работе как сетевой сервис учитывайте AGPL. Без PyMuPDF недоступны только широкие таблицы PDF по
+  координатам. Подробности и варианты — в [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+- OCR — tesseract: на плохих сканах и рукописных вставках числа искажаются, поэтому каждое число проверяется
+  командой `ru-corpus number`.
+- Отказ «в корпусе нет» зависит от лексического пересечения вопроса с корпусом: широкая формулировка с общими
+  словами может получить ложное «есть доказательства» (зафиксировано в `demo/README.md`).
+- В комплекте один отраслевой профиль — `tso_disclosure` (раскрытие информации сетевых организаций); для другой
+  отрасли нужен свой профиль (`[profile]` в `corpus.toml`).
+- Плагин DSH рассчитан на `@deepseek-ai/dsh-tools >=0.2.0-rc.2 <0.3.0`; публикации в npm и PyPI пока нет.
+
+## Лицензия
+
+Apache-2.0 (см. `LICENSE`, `NOTICE`); лицензии зависимостей — в [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+
+Сделано с помощью Claude (Anthropic).
+
+## Внедрение и поддержка
+
+Помощь с внедрением, настройкой профилей под вашу отрасль и поддержкой — через issues репозитория.
