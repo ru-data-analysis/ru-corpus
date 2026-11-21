@@ -1,5 +1,9 @@
 # Изменения
 
+## dsh-ru-corpus 0.1.1 — 21.11.2026
+
+- Диапазон `@deepseek-ai/dsh-tools` в peerDependencies принимает предварительные сборки DSH 0.2.x (в т. ч. 0.2.2-rc.*): прежний `>=0.2.0-rc.2 <0.3.0` их исключал.
+
 ## Не выпущено
 
 - **PyMuPDF (AGPL-3.0) полностью убрана из пакета** `ru-corpus-kit`: ни в зависимостях, ни в extras, ни в тестах. Широкие таблицы PDF (`wide.py`) разбираются на pdfplumber (линейки и прямоугольники сетки) и pypdfium2 (слова с координатами, учёт /Rotate страницы и повёрнутых подписей граф); алгоритм и формат ячеек прежние. Резервное чтение текста PDF — pdfplumber, растеризация для OCR без poppler — pypdfium2. Extras: `[tables]` — pdfplumber + pypdfium2, `[ocr]` — Pillow + pypdfium2, `[test]` — pytest, reportlab, python-docx, Pillow, pdfplumber, pypdfium2.

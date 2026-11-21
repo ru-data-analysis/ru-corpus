@@ -1,6 +1,6 @@
 {
   "name": "dsh-ru-corpus",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Плагин DeepSeek Harness: русский поиск и проверяемая аналитика по корпусу документов — методика в системном промте и инструменты corpus_search, corpus_page, corpus_table, corpus_doc, corpus_number, corpus_aggregate, corpus_calc поверх команды ru-corpus.",
   "type": "module",
   "main": "./lib/index.js",
@@ -30,7 +30,7 @@
     "test": "node test/mock-host.mjs"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-tools": ">=0.2.0-rc.2 <0.3.0"
+    "@deepseek-ai/dsh-tools": ">=0.2.0-0 <0.3.0-0 || >=0.2.1-0 <0.3.0-0 || >=0.2.2-0 <0.3.0-0 || >=0.2.3-0 <0.3.0-0 || >=0.2.4-0 <0.3.0-0"
   },
   "dsh": {
     "bundle": {
