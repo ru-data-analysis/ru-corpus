@@ -251,8 +251,10 @@ def test_scan_ocr(built):
     kit = built["kit"]
     d = doc_id(kit, "skan_dogovor")
     assert kit.db.execute("SELECT method FROM docs WHERE id=?", (d,)).fetchone()[0] == "tesseract"
+    text = tools.page(kit, d, "1")["text"]
     r = tools.search(kit, "договор поставки кабеля")
-    assert r["verdict"] == "есть доказательства" and r["evidence"][0]["doc"] == d
+    assert r["verdict"] == "есть доказательства" and r["evidence"][0]["doc"] == d, \
+        f"OCR дал: {text[:300]!r}; поиск: {r['verdict']}, {[e['doc'] for e in r['evidence'][:3]]}"
     assert tools.page(kit, d, "1")["ocr"] is True
 
 
