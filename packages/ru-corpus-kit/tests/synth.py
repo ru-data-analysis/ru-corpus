@@ -115,8 +115,8 @@ def make_wide(path: Path):
     doc.save(str(path))
 
 
-def make_scan(path: Path):
-    """Скан: страница-картинка без текстового слоя."""
+def make_scan(path: Path, rotate: int = 0):
+    """Скан: страница-картинка без текстового слоя; rotate — повернуть картинку (90/180/270)."""
     src = pymupdf.open()
     pg = src.new_page()
     y = 150
@@ -126,7 +126,7 @@ def make_scan(path: Path):
     pix = pg.get_pixmap(dpi=200, colorspace=pymupdf.csGRAY)
     out = pymupdf.open()
     page = out.new_page()
-    page.insert_image(page.rect, stream=pix.tobytes("png"))
+    page.insert_image(page.rect, stream=pix.tobytes("png"), rotate=rotate)
     out.save(str(path))
 
 

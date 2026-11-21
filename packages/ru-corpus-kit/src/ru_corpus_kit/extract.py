@@ -116,6 +116,16 @@ def _score(txt):
     return sum(1 for w in words if w in STOP) * 2 + len(words) * 0.2
 
 
+def _quality(txt):
+    """Сравнение вариантов поворота: число слов, известных словарю, плюс частые слова.
+    Мусор от перевёрнутого скана тоже содержит кириллицу, но почти не содержит настоящих слов."""
+    words = [w.lower() for w in RU_WORD.findall(txt)]
+    if norm._MORPH is None:
+        return _score(txt)
+    known = sum(1 for w in words if len(w) > 2 and norm._MORPH.word_is_known(w))
+    return known * 2 + sum(1 for w in words if w in STOP)
+
+
 def _known_ratio(txt):
     """Доля слов, известных морфологическому словарю: у повёрнутого скана падает ниже 0.6."""
     if norm._MORPH is None:
@@ -165,33 +175,47 @@ def ocr_pdf(path: Path, ocr_limit=None, dpi=300, psm=4, workers=4, langs="rus+en
             time.sleep(1 + k)
         return r
 
-    def osd_rotate(img):
-        osd = tess(["--psm", "0"], img).stdout
-        m = re.search(r"Rotate:\s*(\d+)", osd or "")
-        angle = int(m.group(1)) if m else 0
-        if angle:
-            with Image.open(img) as im:
-                im.rotate(-angle, expand=True).save(img)
-        return angle
+    def osd_angle(img):
+        """Угол по OSD; None, если OSD не уверен (короткий текст — частая ошибка на 180°)."""
+        osd = tess(["--psm", "0"], img).stdout or ""
+        m = re.search(r"Rotate:\s*(\d+)", osd)
+        c = re.search(r"Orientation confidence:\s*([\d.]+)", osd)
+        if not m:
+            return None
+        return int(m.group(1)) if (c is None or float(c.group(1)) >= 2.0) else None
+
+    def ocr_at(img, angle):
+        if not angle:
+            return tess(base_args, img).stdout.strip()
+        with Image.open(img) as im:
+            rot = img.with_name(img.stem + f"_rot{angle}.png")
+            im.rotate(-angle, expand=True).save(rot)
+        try:
+            return tess(base_args, rot).stdout.strip()
+        finally:
+            rot.unlink(missing_ok=True)
 
     def ocr_one(item):
         i, img = item
         try:
-            osd_rotate(img)
+            a = osd_angle(img)
         except Exception:                        # OSD нужен не всегда (мало текста — tesseract отказывает)
-            pass
-        txt = tess(base_args, img).stdout.strip()
+            a = None
+        # исходная ориентация всегда в кандидатах: OSD иногда ошибается и переворачивает нормальную страницу
+        cands = {0: ocr_at(img, 0)}
+        if a:
+            cands[a] = ocr_at(img, a)
+        best = max(cands, key=lambda k: _quality(cands[k]))
+        txt = cands[best]
         if _score(txt) < 150 or _known_ratio(txt) < 0.6:
             for angle in (180, 90, 270):
+                if angle in cands:
+                    continue
                 if angle != 180 and _score(txt) >= 60:
                     break
-                with Image.open(img) as im:
-                    rot = img.with_name(img.stem + f"_rot{angle}.png")
-                    im.rotate(-angle, expand=True).save(rot)
-                txt2 = tess(base_args, rot).stdout.strip()
-                if _score(txt2) > _score(txt):
-                    txt = txt2
-                rot.unlink(missing_ok=True)
+                cands[angle] = ocr_at(img, angle)
+                if _quality(cands[angle]) > _quality(txt):
+                    txt = cands[angle]
         return i, txt
 
     with tempfile.TemporaryDirectory(dir=tmp_dir) as td:

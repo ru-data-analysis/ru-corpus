@@ -258,6 +258,18 @@ def test_scan_ocr(built):
     assert tools.page(kit, d, "1")["ocr"] is True
 
 
+@pytest.mark.skipif(OCR_WHY is not None, reason=f"OCR недоступен: {OCR_WHY}")
+@pytest.mark.parametrize("rotate", [0, 180])
+def test_ocr_orientation(tmp_path, rotate):
+    """Нормальная страница не переворачивается, перевёрнутая — возвращается (ошибка OSD на Linux, 21.11)."""
+    import synth
+    from ru_corpus_kit import extract
+    pdf = tmp_path / f"scan_{rotate}.pdf"
+    synth.make_scan(pdf, rotate=rotate)
+    text = " ".join(extract.ocr_pdf(pdf, workers=1, tmp_dir=tmp_path / "ocr")).lower()
+    assert "кабел" in text and "договор" in text, text[:300]
+
+
 # ---------------------------------------------------------------- инкрементальность
 
 def test_incremental_reindex(tmp_path):
