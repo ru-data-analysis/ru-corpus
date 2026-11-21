@@ -1,0 +1,10 @@
+{
+  "name": "ru-corpus",
+  "version": "0.1.0",
+  "description": "Русский поиск по локальному корпусу документов (команда ru-corpus) и методика проверяемой аналитики: у каждой цифры документ и страница, «в корпусе нет» честно.",
+  "author": { "name": "ru-data-analysis", "url": "https://github.com/ru-data-analysis" },
+  "homepage": "https://github.com/ru-data-analysis/ru-corpus",
+  "repository": "https://github.com/ru-data-analysis/ru-corpus",
+  "license": "Apache-2.0",
+  "keywords": ["russian", "corpus", "search", "ocr", "analytics"]
+}

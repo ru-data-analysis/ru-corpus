@@ -24,14 +24,14 @@ dependencies = [
 
 [project.optional-dependencies]
 # OCR сканов: tesseract (rus) должен стоять в системе; здесь только Python-часть
-ocr = ["pillow>=10", "pymupdf>=1.24"]
+ocr = ["pillow>=10", "pymupdf>=1.24,<2"]
 # таблицы PDF: сетки (pdfplumber) и широкие таблицы по координатам (PyMuPDF)
-tables = ["pdfplumber>=0.11", "pymupdf>=1.24"]
+tables = ["pdfplumber>=0.11", "pymupdf>=1.24,<2"]
 # повторное ранжирование кросс-энкодером
 rerank = ["sentence-transformers>=3"]
 # .xls и .pptx без LibreOffice
 office = ["xlrd>=2.0", "python-pptx>=1.0"]
-test = ["pytest>=8", "pillow>=10", "pymupdf>=1.24", "pdfplumber>=0.11", "python-docx>=1.1"]
+test = ["pytest>=8", "pillow>=10", "pymupdf>=1.24,<2", "pdfplumber>=0.11", "python-docx>=1.1"]
 
 [project.scripts]
 ru-corpus = "ru_corpus_kit.cli:main"

@@ -15,6 +15,8 @@ jobs:
           python-version: "3.12"
       - name: Проверка вычистки
         run: python3 scripts/scrub_check.py
+      - name: Копии навыков в плагине Claude Code совпадают с skills/
+        run: python3 scripts/sync_claude_plugin.py --check
 
   kit:
     name: kit (${{ matrix.os }}, py${{ matrix.python }})

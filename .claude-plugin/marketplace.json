@@ -8,16 +8,18 @@
   "plugins": [
     {
       "name": "ru-corpus",
-      "source": "./",
+      "source": "./plugins/claude-ru-corpus",
       "description": "Русский поиск по локальному корпусу документов (команда ru-corpus) и методика проверяемой аналитики: у каждой цифры документ и страница, «в корпусе нет» честно.",
       "version": "0.1.0",
       "license": "Apache-2.0",
-      "keywords": ["russian", "corpus", "search", "ocr", "analytics"],
-      "category": "research",
-      "skills": [
-        "./skills/russian-corpus-search",
-        "./skills/corpus-analytics-ru"
-      ]
+      "keywords": [
+        "russian",
+        "corpus",
+        "search",
+        "ocr",
+        "analytics"
+      ],
+      "category": "research"
     }
   ]
 }
