@@ -419,3 +419,87 @@ def test_partition_and_verify_quotes(tmp_path):
     wf.write_text(json.dumps({"worker_id": "w01", "findings": [{"doc_id": doc, "answer": "x", "quotes": [
         {"text": "выдуманная фраза", "locator": "п. 2", "proves": "x"}]}]}, ensure_ascii=False), encoding="utf-8")
     assert "цитата не найдена" in run(VERIFY, tmp_path / "cl" / "t1", check=1).stdout
+
+
+# --------------------------------------------------------------------------- признак текстового слоя PDF
+def make_pdf(path, pages, compress=False, encrypt=False):
+    """pages: список 'text' | 'scan' | 'ocr'. Минимальный PDF без таблицы xref: эвристика её не читает."""
+    import zlib
+    out = [b"%PDF-1.4\n"]
+    for i, kind in enumerate(pages, 1):
+        out.append(b"%d 0 obj\n<< /Type /Page /Parent 99 0 R >>\nendobj\n" % i)
+        if kind == "scan":
+            out.append(b"/Subtype /Image\n")
+        body = {"text": b"BT /F1 12 Tf (Tekst) Tj ET", "scan": b"q 100 0 0 100 0 0 cm /Im0 Do Q",
+                "ocr": b"BT 3 Tr /F1 12 Tf (Tekst) Tj ET"}[kind]
+        if kind == "ocr":
+            out.append(b"/Subtype /Image\n")
+        if compress:
+            body = zlib.compress(body)
+        out.append(b"stream\n" + body + b"\nendstream\n")
+    out.append(b"trailer << /Encrypt 1 0 R >>\n" if encrypt else b"trailer << >>\n")
+    with open(path, "wb") as f:
+        f.write(b"".join(out))
+
+
+def textlayer(tmp_path, files):
+    root = tmp_path / "pdfs"
+    root.mkdir()
+    for name, (pages, kw) in files.items():
+        make_pdf(root / name, pages, **kw)
+    out = tmp_path / "tl.csv"
+    run(SRC, "textlayer", root, "--out", out, check=0)
+    import csv as _csv
+    with open(out, encoding="utf-8", newline="") as f:
+        return root, out, {r["path"]: r for r in _csv.DictReader(f)}
+
+
+def test_textlayer_detects_kinds(tmp_path):
+    _, _, tl = textlayer(tmp_path, {
+        "text.pdf": (["text", "text"], {}),
+        "zip.pdf": (["text", "text"], {"compress": True}),
+        "scan.pdf": (["scan", "scan"], {}),
+        "mixed.pdf": (["text", "scan"], {}),
+        "ocr.pdf": (["ocr", "ocr"], {}),
+        "enc.pdf": (["text"], {"encrypt": True}),
+    })
+    assert {k: v["text_layer"] for k, v in tl.items()} == {
+        "text.pdf": "yes", "zip.pdf": "yes", "scan.pdf": "no", "mixed.pdf": "partial",
+        "ocr.pdf": "ocr_layer", "enc.pdf": "unknown"}
+
+
+def test_classify_uses_textlayer_and_gate_modes(tmp_path):
+    root, tl_csv, _ = textlayer(tmp_path, {"t.pdf": (["text"], {}), "s.pdf": (["scan"], {}),
+                                          "m.pdf": (["text", "scan"], {}), "u.pdf": (["text"], {"encrypt": True})})
+    reg = tmp_path / "reg.csv"
+    reg.write_text("файл,url_источника\n" + "".join(f"{n},https://government.ru/x\n" for n in
+                   ("t.pdf", "s.pdf", "m.pdf", "u.pdf")), encoding="utf-8")
+    classes = tmp_path / "cl.csv"
+    run(SRC, "classify", reg, "--out", classes, "--root", root, "--textlayer", tl_csv, check=0)
+    import csv as _csv
+    with open(classes, encoding="utf-8", newline="") as f:
+        q = {r["path"]: r["quality"] for r in _csv.DictReader(f)}
+    assert q == {"t.pdf": "T", "s.pdf": "X", "m.pdf": "P", "u.pdf": "?"}
+
+    def gate(name, *args, locator="стр. 1"):
+        ev = [{"path": name, "locator": locator}]
+        return run(SRC, "gate", make_registry(tmp_path, [insight("i", "definite", ev)]), classes, *args, check=None)
+    assert gate("t.pdf").returncode == 0
+    p = gate("s.pdf", "--allow-ocr")
+    assert p.returncode == 1 and "сначала распознайте" in p.stdout          # скан не пускается никогда
+    assert gate("m.pdf").returncode == 1
+    assert gate("m.pdf", "--allow-ocr").returncode == 0
+    assert gate("m.pdf", "--allow-ocr", locator="").returncode == 1          # без страницы нельзя
+    assert gate("u.pdf", "--allow-ocr").returncode == 1
+    p = gate("u.pdf", "--allow-unknown-quality")
+    assert p.returncode == 0 and "предупреждение" in p.stdout
+
+
+def test_textlayer_goes_stale_when_file_changes(tmp_path):
+    root, tl_csv, _ = textlayer(tmp_path, {"t.pdf": (["text"], {})})
+    make_pdf(root / "t.pdf", ["scan"])  # файл подменили, признак старый
+    reg = tmp_path / "reg.csv"
+    reg.write_text("файл,url_источника\nt.pdf,https://government.ru/x\n", encoding="utf-8")
+    classes = tmp_path / "cl.csv"
+    run(SRC, "classify", reg, "--out", classes, "--root", root, "--textlayer", tl_csv, check=0)
+    assert ",?," in classes.read_text(encoding="utf-8") and "устарел" in classes.read_text(encoding="utf-8")
