@@ -12,7 +12,7 @@ import sys
 from datetime import datetime, timezone
 
 SKIP_DIRS = {".git", ".kb", ".cache", "index", "__pycache__", "node_modules"}
-PATH_COLS = ("rel_path", "файл", "path")
+PATH_COLS = ("rel_path", "файл", "path", "file")
 
 
 def sha256_file(path):
@@ -78,7 +78,7 @@ def cmd_snapshot(a):
 
 
 def cmd_from_csv(a):
-    with open(a.csv, encoding="utf-8", newline="") as f:
+    with open(a.csv, encoding="utf-8-sig", newline="") as f:
         rows = list(csv.DictReader(f))
     if not rows:
         sys.exit("пустой CSV")

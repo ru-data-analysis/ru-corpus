@@ -9,10 +9,12 @@ from urllib.parse import urlparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_RULES = os.path.join(HERE, "..", "references", "classes.default.json")
-PATH_COLS = ("файл", "rel_path", "path")
+PATH_COLS = ("файл", "rel_path", "path", "file")
 URL_COLS = ("url_источника", "url")
 TEXT_COLS = ("текстовый_слой", "text_layer")
-OUT_COLS = ["path", "origin_class", "quality", "host", "reason"]
+OUT_COLS = ["path", "origin_class", "quality", "host", "reason", "registry_path", "resolved"]
+EXT_TEXT = {".html", ".htm", ".xls", ".xlsx", ".docx", ".doc", ".rtf", ".txt", ".csv", ".json", ".xml"}
+EXT_SCAN = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".gif"}
 
 
 def pick(row, cols):
@@ -31,10 +33,13 @@ def host_class(host, rules):
     return "?", f"хост «{host or 'нет url'}» не входит ни в один список"
 
 
-def quality_of(text):
+def quality_of(text, path=""):
+    """Качество по колонке текстового слоя; если колонки нет, по расширению. PDF и архивы остаются «?»:
+    наличие текстового слоя у PDF по расширению не узнать."""
     t = (text or "").strip().lower()
     if not t:
-        return "?"
+        ext = os.path.splitext(path)[1].lower()
+        return "T" if ext in EXT_TEXT else "O" if ext in EXT_SCAN else "?"
     if t.startswith("нет"):
         return "O"
     if t.startswith("да"):
@@ -51,7 +56,7 @@ def load_overrides(path):
     out = {}
     if not path:
         return out
-    with open(path, encoding="utf-8", newline="") as f:
+    with open(path, encoding="utf-8-sig", newline="") as f:
         for i, r in enumerate(csv.DictReader(f), 2):
             if r.get("class") not in ("A", "B", "C", "?") or not r.get("path"):
                 sys.exit(f"{path}: строка {i}: нужны path и class ∈ A,B,C,?")
@@ -63,30 +68,56 @@ def load_overrides(path):
 
 def cmd_classify(a):
     rules, over = load_rules(a.rules), load_overrides(a.overrides)
-    with open(a.registry, encoding="utf-8", newline="") as f:
+    with open(a.registry, encoding="utf-8-sig", newline="") as f:
         rows = list(csv.DictReader(f))
     if not rows:
         sys.exit("пустой реестр")
     if not any(c in rows[0] for c in PATH_COLS):
         sys.exit(f"нет колонки пути ({', '.join(PATH_COLS)})")
-    out = []
+    index = None
+    if a.root:  # реестры отстают от диска: сопоставляем путь из реестра с файлом по имени
+        index = {}
+        for d, dirs, files in os.walk(a.root):
+            dirs[:] = sorted(x for x in dirs if not x.startswith("."))
+            for fn in files:
+                if not fn.startswith("."):
+                    rel = os.path.relpath(os.path.join(d, fn), a.root).replace(os.sep, "/")
+                    index.setdefault(fn, []).append(rel)
+    out, skipped = [], 0
     for r in rows:
-        path = pick(r, PATH_COLS).replace("\\", "/")
+        reg_path = pick(r, PATH_COLS).strip().replace("\\", "/")
+        if not reg_path:
+            skipped += 1  # загрузка не удалась: файла нет
+            continue
+        path, resolved = reg_path, ""
+        if index is not None:
+            if os.path.isfile(os.path.join(a.root, reg_path)):
+                resolved = "exact"
+            else:
+                hits = index.get(os.path.basename(reg_path), [])
+                if len(hits) == 1:
+                    path, resolved = hits[0], "basename"
+                else:
+                    resolved = "ambiguous" if hits else "missing"
         host = urlparse(pick(r, URL_COLS)).hostname or ""
-        cls, why = over.get(path) or host_class(host, rules)
-        out.append({"path": path, "origin_class": cls, "quality": quality_of(pick(r, TEXT_COLS)),
-                    "host": host, "reason": why})
+        cls, why = over.get(reg_path) or over.get(path) or host_class(host, rules)
+        out.append({"path": path, "origin_class": cls, "quality": quality_of(pick(r, TEXT_COLS), path),
+                    "host": host, "reason": why, "registry_path": reg_path, "resolved": resolved})
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, "w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=OUT_COLS)
         w.writeheader()
         w.writerows(out)
     unknown = sum(1 for o in out if o["origin_class"] == "?")
-    print(f"{a.out}: документов {len(out)}, не определено {unknown}")
+    msg = f"{a.out}: документов {len(out)}, не определено {unknown}, строк без файла {skipped}"
+    if index is not None:
+        counts = {k: sum(1 for o in out if o["resolved"] == k) for k in ("exact", "basename", "ambiguous", "missing")}
+        msg += f"; сопоставление с диском: {counts}"
+    print(msg)
 
 
 def read_classes(path):
-    with open(path, encoding="utf-8", newline="") as f:
+    with open(path, encoding="utf-8-sig", newline="") as f:
         return {r["path"]: r for r in csv.DictReader(f)}
 
 
@@ -134,6 +165,7 @@ def main():
     sp = p.add_subparsers(dest="cmd", required=True)
     c = sp.add_parser("classify"); c.add_argument("registry"); c.add_argument("--out", required=True)
     c.add_argument("--rules"); c.add_argument("--overrides")
+    c.add_argument("--root", help="каталог корпуса: пути реестра сопоставляются с файлами на диске по имени")
     s = sp.add_parser("summary"); s.add_argument("classes")
     g = sp.add_parser("gate"); g.add_argument("registry"); g.add_argument("classes")
     g.add_argument("--allow-ocr", action="store_true"); g.add_argument("--allow-class", action="append", choices=["B", "C"])

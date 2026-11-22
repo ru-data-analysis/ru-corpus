@@ -152,6 +152,37 @@ def test_source_overrides_need_reason(tmp_path):
     assert rows["regions/ivanovo/2024-11-08_det-ivanovo_post-41-e1_tarify-naselenie.pdf"]["origin_class"] == "A"
 
 
+def test_source_classify_crawler_registry_with_root(tmp_path):
+    """Реестр краулера: колонка file, BOM, пути отстали от диска, есть строка без файла."""
+    root = tmp_path / "корпус"
+    (root / "files").mkdir(parents=True)
+    (root / "other").mkdir()
+    for p in ("files/один.pdf", "files/два.xlsx", "files/скан.png", "files/дубль.doc", "other/дубль.doc"):
+        (root / p).write_text("x", encoding="utf-8")
+    reg = tmp_path / "manifest.csv"
+    reg.write_text("\ufeffn,url,file,ok\n"
+                   "1,https://docs.example.test/a,site/один.pdf,true\n"
+                   "2,https://docs.example.test/b,site/два.xlsx,true\n"
+                   "3,https://docs.example.test/c,site/скан.png,true\n"
+                   "4,https://docs.example.test/d,site/дубль.doc,true\n"
+                   "5,https://docs.example.test/e,site/нет.pdf,true\n"
+                   "6,https://docs.example.test/f,,false\n", encoding="utf-8")
+    rules = tmp_path / "rules.json"
+    rules.write_text(json.dumps({"origin": {"A": ["example.test"]}}), encoding="utf-8")
+    out = tmp_path / "c.csv"
+    p = run(SRC, "classify", reg, "--out", out, "--rules", rules, "--root", root, check=0)
+    assert "строк без файла 1" in p.stdout
+    import csv
+    with open(out, encoding="utf-8-sig", newline="") as f:
+        rows = {r["registry_path"]: r for r in csv.DictReader(f)}
+    assert len(rows) == 5
+    assert rows["site/один.pdf"]["path"] == "files/один.pdf" and rows["site/один.pdf"]["resolved"] == "basename"
+    assert rows["site/один.pdf"]["origin_class"] == "A" and rows["site/один.pdf"]["quality"] == "?"  # PDF: слой неизвестен
+    assert rows["site/два.xlsx"]["quality"] == "T" and rows["site/скан.png"]["quality"] == "O"
+    assert rows["site/дубль.doc"]["resolved"] == "ambiguous" and rows["site/дубль.doc"]["path"] == "site/дубль.doc"
+    assert rows["site/нет.pdf"]["resolved"] == "missing"
+
+
 def make_registry(tmp_path, insights):
     reg = tmp_path / "reg.json"
     reg.write_text(json.dumps({"version": 1, "insights": insights}, ensure_ascii=False), encoding="utf-8")
