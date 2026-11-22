@@ -17,7 +17,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "skills"
 DST = ROOT / "plugins" / "claude-ru-corpus" / "skills"
-SKILLS = ["russian-corpus-search", "corpus-analytics-ru"]
+SKILLS = [
+    "russian-corpus-search",
+    "corpus-analytics-ru",
+    "analysis-spec-first",
+    "insight-registry",
+    "corpus-cluster-orchestrator",
+    "corpus-manifest",
+    "period-comparability",
+    "source-classes",
+    "leak-check",
+    "cost-log",
+]
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store")
 
 

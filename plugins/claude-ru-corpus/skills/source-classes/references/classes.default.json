@@ -1,0 +1,8 @@
+{
+  "comment": "Правила по умолчанию. Суффиксы хостов сравниваются с концом имени хоста. Всё, чего нет в списках, получает класс «?».",
+  "origin": {
+    "A": ["government.ru", "kremlin.ru", "pravo.gov.ru", "gov.ru", "minenergo.gov.ru", "fas.gov.ru", "mos.ru", "gov.spb.ru"],
+    "B": ["consultant.ru", "garant.ru", "cntd.ru"],
+    "C": ["ria.ru", "tass.ru", "rbc.ru", "kommersant.ru", "vedomosti.ru", "interfax.ru"]
+  }
+}

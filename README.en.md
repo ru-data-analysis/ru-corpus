@@ -18,6 +18,12 @@ to your documents.
 - `skills/russian-corpus-search` and `skills/corpus-analytics-ru` — `SKILL.md` skills: Russian search and a
   methodology for verifiable analytics; a sector reference on grid-company disclosure is in
   `skills/corpus-analytics-ru/references/tso-disclosure.md`;
+- analysis-process skills on top of the corpus, each with standard-library Python scripts and tests in
+  `tests/skills`: `analysis-spec-first` (decision rule before the run and a working report), `insight-registry`
+  (registry of findings and re-checking), `corpus-cluster-orchestrator` (clustering documents by a question),
+  `corpus-manifest` (corpus snapshot and hash), `period-comparability` (breaks between periods),
+  `source-classes` (source class and text quality), `leak-check` (pre-publication check), `cost-log`
+  (run cost);
 - `plugins/claude-ru-corpus` — a Claude Code plugin with copies of the skills (refreshed by
   `scripts/sync_claude_plugin.py`); `.claude-plugin/marketplace.json` is the marketplace;
 - `demo` — a demo corpus of 15 official acts and 6 control questions.

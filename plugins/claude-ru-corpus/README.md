@@ -1,6 +1,8 @@
 # claude-ru-corpus
 
-Плагин Claude Code `ru-corpus`: два навыка (`russian-corpus-search`, `corpus-analytics-ru`).
+Плагин Claude Code `ru-corpus`: навыки поиска и аналитики (`russian-corpus-search`, `corpus-analytics-ru`)
+и навыки процесса анализа (`analysis-spec-first`, `insight-registry`, `corpus-cluster-orchestrator`,
+`corpus-manifest`, `period-comparability`, `source-classes`, `leak-check`, `cost-log`).
 
 Установка:
 
