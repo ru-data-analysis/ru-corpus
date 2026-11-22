@@ -448,7 +448,7 @@ def textlayer(tmp_path, files):
     for name, (pages, kw) in files.items():
         make_pdf(root / name, pages, **kw)
     out = tmp_path / "tl.csv"
-    run(SRC, "textlayer", root, "--out", out, check=0)
+    run(SRC, "textlayer", root, "--out", out, "--engine", "heuristic", check=0)
     import csv as _csv
     with open(out, encoding="utf-8", newline="") as f:
         return root, out, {r["path"]: r for r in _csv.DictReader(f)}
@@ -503,3 +503,12 @@ def test_textlayer_goes_stale_when_file_changes(tmp_path):
     classes = tmp_path / "cl.csv"
     run(SRC, "classify", reg, "--out", classes, "--root", root, "--textlayer", tl_csv, check=0)
     assert ",?," in classes.read_text(encoding="utf-8") and "устарел" in classes.read_text(encoding="utf-8")
+
+
+def test_textlayer_engine_pdftotext_required(tmp_path):
+    import shutil
+    if shutil.which("pdftotext"):
+        return
+    root = tmp_path / "p"; root.mkdir(); make_pdf(root / "a.pdf", ["text"])
+    assert run(SRC, "textlayer", root, "--out", tmp_path / "o.csv", "--engine", "pdftotext", check=1)
+    run(SRC, "textlayer", root, "--out", tmp_path / "o.csv", "--engine", "auto", check=0)

@@ -6,6 +6,8 @@ import hashlib
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 import zlib
 from urllib.parse import urlparse
@@ -76,7 +78,25 @@ def pdf_textlayer(data):
     return ("yes" if text_streams >= 0.9 * pages else "partial"), pages, text_streams, images
 
 
+def pdftotext_verdict(full, exe):
+    """Постраничная проверка настоящей программой: страница с текстом, если на ней не менее 20 знаков."""
+    try:
+        out = subprocess.run([exe, "-layout", full, "-"], capture_output=True, timeout=120).stdout.decode("utf-8", "ignore")
+    except (OSError, subprocess.SubprocessError):
+        return None
+    pages = out.split("\f")
+    if pages and not pages[-1].strip():
+        pages = pages[:-1]
+    if not pages:
+        return None
+    ok = sum(1 for x in pages if len(x.strip()) >= 20)
+    return ("yes" if ok >= 0.9 * len(pages) else "no" if ok == 0 else "partial"), len(pages), ok
+
+
 def cmd_textlayer(a):
+    exe = shutil.which("pdftotext") if a.engine != "heuristic" else None
+    if a.engine == "pdftotext" and not exe:
+        sys.exit("pdftotext не найден: установите poppler или используйте --engine auto|heuristic")
     rows = []
     for d, dirs, files in os.walk(a.root):
         dirs[:] = sorted(x for x in dirs if not x.startswith("."))
@@ -95,6 +115,11 @@ def cmd_textlayer(a):
                         data = f.read()
                     row["sha256"] = hashlib.sha256(data).hexdigest()
                     row["text_layer"], row["pages"], row["text_streams"], row["images"] = pdf_textlayer(data)
+                    if exe and row["text_layer"] not in ("unknown", "ocr_layer"):
+                        v = pdftotext_verdict(os.path.abspath(full), exe)
+                        if v:  # настоящая программа точнее эвристики; невидимый слой распознавания эвристика ловит лучше
+                            row["text_layer"], row["pages"], row["text_streams"] = v
+                            row["method"] = "pdftotext, постранично (в text_streams страницы с текстом)"
             except Exception as e:  # битый файл не должен ронять обход
                 row["method"] = f"ошибка разбора: {type(e).__name__}"
             rows.append(row)
@@ -280,6 +305,8 @@ def main():
     c.add_argument("--textlayer", help="таблица признака текстового слоя PDF (команда textlayer)")
     c.add_argument("--root", help="каталог корпуса: пути реестра сопоставляются с файлами на диске по имени")
     t = sp.add_parser("textlayer", help="определить текстовый слой у PDF корпуса без распознавания")
+    t.add_argument("--engine", choices=["auto", "heuristic", "pdftotext"], default="auto",
+                   help="auto: pdftotext, если установлен, иначе эвристика по потокам PDF")
     t.add_argument("root"); t.add_argument("--out", required=True)
     s = sp.add_parser("summary"); s.add_argument("classes")
     g = sp.add_parser("gate"); g.add_argument("registry"); g.add_argument("classes")
