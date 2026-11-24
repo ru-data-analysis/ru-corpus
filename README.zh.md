@@ -14,7 +14,10 @@
 - `packages/dsh-ru-corpus`：DeepSeek Harness（DSH）插件，在系统提示中加入分析方法，并在 `ru-corpus` 之上提供七个 `corpus_*` 工具；
 - `skills/russian-corpus-search` 与 `skills/corpus-analytics-ru`：`SKILL.md` 技能，分别提供俄语搜索和可核验分析的方法；
   电网企业信息披露的行业参考见 `skills/corpus-analytics-ru/references/tso-disclosure.md`；
-- `plugins/claude-ru-corpus`：Claude Code 插件，内含两个技能的副本（由 `scripts/sync_claude_plugin.py` 同步）；
+- 语料库之上的分析流程技能，各带仅用 Python 标准库的脚本，测试位于 `tests/skills`：`analysis-spec-first`（运行前先定判定规则并写工作报告）、
+  `insight-registry`（结论登记与复核）、`corpus-cluster-orchestrator`（按问题对文档聚类）、`corpus-manifest`（语料快照与哈希）、
+  `period-comparability`（期间间的断点）、`source-classes`（来源类别与文本质量）、`leak-check`（发布前检查）、`cost-log`（运行成本）；
+- `plugins/claude-ru-corpus`：Claude Code 插件，内含全部技能的副本（由 `scripts/sync_claude_plugin.py` 同步）；
   `.claude-plugin/marketplace.json` 为插件市场清单；
 - `demo`：演示语料库，包含 15 份官方文件和 6 个检验问题。
 

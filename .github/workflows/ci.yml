@@ -48,6 +48,24 @@ jobs:
       - name: Тесты ru-corpus-kit
         run: python -m pytest packages/ru-corpus-kit/tests
 
+  skills:
+    name: skills (${{ matrix.os }}, py${{ matrix.python }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.10", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Установка pytest
+        run: python -m pip install pytest
+      - name: Тесты скриптов навыков (стандартная библиотека, синтетика и демо-реестр)
+        run: python -m pytest tests/skills
+
   plugin:
     name: plugin (${{ matrix.os }})
     strategy:

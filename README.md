@@ -17,6 +17,12 @@
 - `skills/russian-corpus-search` и `skills/corpus-analytics-ru` — навыки `SKILL.md`: русский поиск и
   методика проверяемой аналитики; отраслевой справочник по раскрытию информации сетевых организаций —
   `skills/corpus-analytics-ru/references/tso-disclosure.md`;
+- навыки процесса анализа поверх корпуса, каждый со скриптами на стандартной библиотеке Python и тестами в
+  `tests/skills`: `analysis-spec-first` (правило решения до прогона и рабочий отчёт), `insight-registry`
+  (реестр выводов и перепроверка), `corpus-cluster-orchestrator` (кластеризация документов по вопросу),
+  `corpus-manifest` (снимок и хэш корпуса), `period-comparability` (разрывы между периодами),
+  `source-classes` (класс и качество источника), `leak-check` (проверка перед публикацией), `cost-log`
+  (затраты прогона);
 - `plugins/claude-ru-corpus` — плагин Claude Code с копиями навыков (обновляются скриптом
   `scripts/sync_claude_plugin.py`); `.claude-plugin/marketplace.json` — маркетплейс;
 - `demo` — демо-корпус из 15 официальных актов и 6 контрольных вопросов.
